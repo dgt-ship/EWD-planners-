@@ -23,6 +23,13 @@
 <html lang="pt-BR" class="brand-dan"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Clothes · Tarefa · English with Dan</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tarefa da semana · Clothes">
+<meta property="og:description" content="Alexandre e Paula · 3 tarefas curtas · English with Dan">
+<meta property="og:image" content="https://ewd-planners.onrender.com/preview.png">
+<meta property="og:image:width" content="600"><meta property="og:image:height" content="600">
+<meta property="og:url" content="https://ewd-planners.onrender.com/mini-missao-clothes.html">
+<meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
 <style>
@@ -75,6 +82,15 @@ details ul{margin:8px 0 2px 18px;display:flex;flex-direction:column;gap:3px}
 .tabs button{font:700 13px var(--display);border:1.5px solid var(--gray-mid);background:#fff;color:var(--ink);border-radius:20px;padding:6px 12px;cursor:pointer}
 .tabs button[aria-current="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 .tabs button.ok::after{content:" ✓"}
+.teacher{border:1px dashed var(--gray-mid);border-radius:12px;padding:10px 12px;margin-top:22px;font-size:14.5px}
+.teacher summary{color:var(--t3);font-weight:600}
+.tmsg{border:1px solid var(--border);border-radius:12px;padding:12px;margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.tmsg b{font:800 14px var(--display)}
+.tmsg textarea{font:14.5px var(--body);line-height:1.45;border:1.5px solid var(--gray-mid);border-radius:10px;padding:10px;min-height:150px;resize:vertical;color:var(--ink)}
+.trow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wa{background:#1F8A63;color:#fff;text-decoration:none;font:800 14px var(--display);border-radius:10px;padding:10px 14px}
+.cp{background:#fff;border:1.5px solid var(--ink);color:var(--ink);font:700 14px var(--display);border-radius:10px;padding:9px 14px;cursor:pointer}
+.cpok{font-size:13px;color:#1F8A63}
 @media (prefers-reduced-motion:reduce){.bar i,.done{transition:none}}
 </style>
 </head><body>
@@ -101,6 +117,7 @@ details ul{margin:8px 0 2px 18px;display:flex;flex-direction:column;gap:3px}
   <button class="done" type="button" id="done">Feito ✓</button>
   <p class="cele" id="cele" hidden></p>
   <div class="prog"><span id="progTxt"></span><div class="bar"><i id="bar"></i></div></div>
+  <details class="teacher" id="teacher"><summary>Para o professor</summary><div id="tmsgs"></div></details>
 </main>
 <script>
 /* ====== EDITE AQUI ====== */
@@ -193,7 +210,27 @@ var MISSION = {
     var now = !S.done[cur]; if (now) S.done[cur] = true; else delete S.done[cur];
     save(); paint(now);
   });
+  var hm = /^#t(\d+)$/.exec(location.hash);
+  if (hm && MISSION.tasks[+hm[1] - 1]) cur = +hm[1] - 1;
+  window.addEventListener("hashchange", function () { var m = /^#t(\d+)$/.exec(location.hash); if (m && MISSION.tasks[+m[1] - 1]) { cur = +m[1] - 1; render(); window.scrollTo(0, 0); } });
   render();
+
+  /* mensagens de WhatsApp para o professor */
+  var base = location.origin + location.pathname;
+  $("tmsgs").innerHTML = MISSION.tasks.map(function (d, i) {
+    var msg = "Oi, " + name + "! 👋 A tarefa de hoje (" + d.day.toLowerCase() + ") · " + d.dur + ":\n*" + d.title + "*\n👉 " + base + "#t" + (i + 1) + "\nQuando terminarem, toquem em “Feito”.";
+    return '<div class="tmsg"><b>' + esc(d.day) + " · " + esc(LABEL[d.type] || "") + '</b><textarea data-i="' + i + '">' + esc(msg) + '</textarea><div class="trow"><a class="wa" target="_blank" rel="noopener" href="#">Enviar no WhatsApp</a><button class="cp" type="button">Copiar</button><span class="cpok"></span></div></div>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll(".tmsg"), function (box) {
+    var ta = box.querySelector("textarea"), wa = box.querySelector(".wa"), ok = box.querySelector(".cpok");
+    var set = function () { wa.href = "https://wa.me/?text=" + encodeURIComponent(ta.value); };
+    set(); ta.addEventListener("input", set);
+    box.querySelector(".cp").addEventListener("click", function () {
+      var done = function (v) { ok.textContent = v ? "Copiado!" : "Selecione e copie manualmente."; setTimeout(function () { ok.textContent = ""; }, 2500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(function () { done(true); }, function () { ta.select(); done(document.execCommand("copy")); });
+      else { ta.select(); done(document.execCommand("copy")); }
+    });
+  });
 })();
 </script>
 </body></html>
